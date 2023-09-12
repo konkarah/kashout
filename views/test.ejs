@@ -1,0 +1,37 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="signin.css">
+</head>
+<body>
+    <div class="wrap">
+        <h2>sign up here</h2>
+        <form method="post" action="/">
+            <!--<input type="text" placeholder="first name" name="firstname" required>
+            <input type="text" placeholder="last name" name="lastname" required>
+            <input type="email" placeholder="email" name="email" required>
+            <input type="password" placeholder="password" name="password" required>
+            <input type="password" placeholder="retype password" name="confirmpass" required>-->
+            <input type="submit" name="submit" value="submit">
+            <p id="link"><a href="http://localhost:3005/user/signin">Sign In</a></p>
+        </form>
+    </div>
+
+    <script>
+        var form = document.forms.form;
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            var email = form.email.value;
+            var password = form.password.value;
+            var confirmpass = form.confirmpass.value;
+            if (password != confirmpass) {
+                alert("password doesn't match");
+            } else {
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

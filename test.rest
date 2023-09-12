@@ -1,0 +1,5 @@
+//http://localhost:3005/accesstoken
+//http://localhost:3005/registerurl
+//http://localhost:3005/simulate
+
+http://localhost:3005/stk

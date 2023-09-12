@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+    <div class="container-fluid">
+
+
+    <!--navbar-->
+    <nav class="navbar navbar-expand-lg bg-dark navbar-dark py-3 fixed-top">
+        <div class="container">
+            <a href="#" class="navbar-brand">Kashout</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" >
+                <span class="navbar-toggler-icon"></span> 
+            </button>    
+
+            <div class="collapse navbar-collapse" id="navmenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <form action="http://localhost:3005/user/signup?_method=DELETE" method="POST"><a href="#" class="nav-link">Log Out</a></form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+        <div class="row">
+          <div class=" col-sm-2">
+            <img src = "index.jpg" 
+            class = "row justify-content-center align-self-center rounded-circle" alt = "Rounded Image" width = "200" height = "200">
+          </div>
+          <div class="col-sm">
+            <sectiion class="p-5">
+                <div class="container">
+                    <div class="row text-center g-4">
+                        <div class="col-md">
+                            <div class="card bg-dark text-light">
+                                <div class="card-body text-center">
+                                    <div class="h1 mb-3">
+                                     <i class="bi bi-laptop"></i>
+                                    </div>
+                                    <h3 class="card-title mb-3">MPESA</h3>
+                                    <p class="card-text">
+                                     Pay using the MPESA Platform, one of the most widely accepted payment methods in Kenya.
+                                    </p>
+                                    <a href="http://localhost:3005/user/mpesa" class="btn btn-primary">Read More</a>
+                                </div> 
+                            </div>
+                        </div>  
+                      <div class="col-md">
+                        <div class="card bg-dark text-light">
+                            <div class="card-body text-center">
+                                <div class="h1 mb-3">
+                                 <i class="bi bi-person-square"></i>
+                                </div>
+                                <h3 class="card-title mb-3">Hybrid</h3>
+                                <p class="card-text">
+                                 Lorem ipsum dolor sit amet consectetur, adipisicing elit. In sit sequi odio, animi praesentium harum. 
+                                </p>
+                                <a href="#" class="btn btn-dark">Read More</a>
+                            </div> 
+                        </div>
+                      </div>  
+                      <div class="col-md">                    <div class="card bg-dark text-light">
+                        <div class="card-body text-center">
+                            <div class="h1 mb-3">
+                             <i class="bi bi-people"></i>
+                            </div>
+                            <h3 class="card-title mb-3">In Person</h3>
+                            <p class="card-text">
+                             Lorem ipsum dolor sit amet consectetur, adipisicing elit. In sit sequi odio, animi praesentium harum. 
+                            </p>
+                            <a href="#" class="btn btn-primary">Read More</a>
+                        </div> 
+                    </div></div>  
+                    </div>
+                </div>
+            </sectiion>
+          </div>
+        </div>
+      </div>
+            <!--Boxes-->
+
+</body>
+</html>
