@@ -21,17 +21,17 @@
   <body>
     <!--my container -->
     <div class="container-fluid">
-      <div class="row">
+      <div class="row align-items-start">
         <!--First column-->
         <div class="col-2">
+          <img src="logo2.png" class="logoo"/>
           <img
             src="index.jpg"
-            class="row justify-content-center align-self-center rounded-circle"
+            class="circular_image"
             alt="Rounded Image"
-            width="200"
-            height="200"
           />
-          <p>Home</p>
+          <p class="pt-5">Home</p>
+          <p class="pt-2">Transactions</p>
         </div>
         <!--First column-->
 
@@ -118,21 +118,42 @@
               <form action="">
                 <div class="row">
                   <div class="col">
-                    <label  for="phone">Phone Number of Payee</label><br>
-                    <input type="tel" placeholder="Phone Number" id="phone" name="phone"><br/>
-                    <label for="amount">Amount</label><br>
-                    <input type="number" name="amount" id="amount">
+                    <label  for="phone"  class="pt-4">Phone Number of Payee</label><br>
+                    <input type="tel" placeholder="Phone Number" id="phone" name="phone" ><br/>
+                    <label for="amount" class="pt-3" >Amount</label><br>
+                    <input type="number" name="amount" id="amount" >
+                    <div class="dropdown pt-2 px-2">
+                      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Timeout
+                      </button>
+                      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="#">24 Hrs</a>
+                        <a class="dropdown-item" href="#">36 Hrs</a>
+                        <a class="dropdown-item" href="#">48 Hrs</a>
+                      </div>
+                    </div>
                   </div>
                   <div class="col">
                     <img src="" alt="" id="courierimage"><br>
                     <label for="courierimage" class="myim">Courier</label>
                   </div>
                 </div>
+                <div class="col text-center">
+                  <button class="btn btn-primary">Send</button>
+                </div>
               </form>
             </div>
         </div>
         <div class="col pt-5">
-            <p>test</p>
+          <h1>Most recent Transactions</h1>
+          <div class="row">
+            <div class="col">
+              <img class="circular_image" src="http://placekitten.com/g/500/500"/>
+              <img class="circular_image" src="http://placekitten.com/g/500/500"/>
+              <img class="circular_image" src="http://placekitten.com/g/500/500"/>
+              <img class="circular_image" src="http://placekitten.com/g/500/500"/>
+            </div>
+          </div>
         </div>
         <!--Row 2-->
         </div>

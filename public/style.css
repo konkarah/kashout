@@ -3,11 +3,6 @@ body::before{
     content: '';
     height: 60px;
 }
-@import url('https://fonts.googleapis.com/css2?family=josefin+Sans:wght@400;500;600;700&display=swap');
-
-@import url('https://fonts.googleapis.com/css?family=Oswald:300,400,500,700');
-
-@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800');
 
 
 * {
@@ -134,5 +129,32 @@ body::before{
 .mycard{
  background: #ff2c7d;
  border-radius: 10px;
- 
+
+}
+
+.circular_image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: blue;
+    /* commented for demo
+    float: left;
+    margin-left: 125px;
+    margin-top: 20px;
+    */
+    
+    /*for demo*/
+    display:inline-block;
+    vertical-align:middle;
+  }
+  .circular_image img{
+    width:100%;
+  }
+
+.logoo{
+    margin-top: 0px;
+    padding-top: 0px;
+    width:240px;
+    height: 100px;
 }
