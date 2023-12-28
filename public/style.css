@@ -157,4 +157,6 @@ body::before{
     padding-top: 0px;
     width:240px;
     height: 100px;
+    display: block;
 }
+

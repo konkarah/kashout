@@ -12,6 +12,10 @@ const flash = require('express-flash');
 const session = require('express-session');
 const methodoverride = require('method-override');
 const axios = require('axios')
+const bodyParser = require('body-parser')
+const unirest = require('unirest')
+
+router.use(bodyParser.json())
 
 
 const initialisepassport = require('../passport-config');
@@ -88,13 +92,26 @@ router.get('/mpesa', (req, res) => {
     res.render('mpesa');
 });
 
-router.post('/mpesanow', (req,res) => {
+router.post('/mpesanow', async (req, res) => {
     const recipient = req.body.recipient;
     const amount = req.body.amount;
 
-    console.log(recipient,amount);
-    lipanampesa()
-})
+    try {
+        const result = await lipanampesa(); // Wait for lipanampesa to complete and get the result
+        console.log(result);
+
+        // Use the result data or handle success/error as needed
+        if (result.success) {
+            res.status(200).json({ success: true, data: result.data });
+        } else {
+            res.status(500).json({ success: false, error: result.error });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: 'An error occurred' });
+    }
+});
+
 
 router.get('/test', (req,res)=> {
     res.render('hometest')
@@ -132,49 +149,71 @@ function startInterval(seconds) {
 const url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
 
 async function lipanampesa() {
-    let oauth_token = ''
-        try {
-          let response = await axios.get(url, {
-              headers: {
-                "Authorization": "Basic " + Buffer.from('UAYWIGgR9xASYtDOBQYmXANzWcA8KAn2:AAj1RxKJSGGYMjwm').toString("base64")
-              }
-          })
-          oauth_token = response.data.access_token; 
-      } catch (error) {
-          console.log("Auth Error: ", error.response);
-      }
-  
-  
-      let timestamp = formatDate();
-      const passkey = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
-      const shortcode = '174379'
+    try {
+        let oauth_token = await getOAuthToken();
         
-      let unirest = require('unirest');
-      let req = unirest('POST', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest')
-      .headers({
-          'Content-Type': 'application/json',
-          /*'Authorization': 'Bearer FZgx61uxWxRhrZTzKSr4DJWsEsVG'*/
-          'Authorization': 'Bearer ' + oauth_token
-      })
-      .send(JSON.stringify({
-          "BusinessShortCode": 174379,
-          "Password": Buffer.from(shortcode + passkey + timestamp).toString("base64"),
-          "Timestamp": timestamp,
-          "TransactionType": "CustomerPayBillOnline",
-          "Amount": 1,
-          "PartyA": 254717616430,
-          "PartyB": 174379,
-          "PhoneNumber": 254717616430,
-          "CallBackURL": "https://inuajamii.go.ke:7000/apptest",
-          "AccountReference": "CompanyXLTD",
-          "TransactionDesc": "Payment of X" 
-        }))
-      .end(res => {
-          if (res.error) throw new Error(res.error);
-          console.log(res.raw_body);
-      });
-  }
+        let timestamp = formatDate();
+        const passkey = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+        const shortcode = '174379'
+        
+        let response = await unirest.post('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest')
+            .headers({
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + oauth_token
+            })
+            .send({
+                "BusinessShortCode": 174379,
+                "Password": Buffer.from(shortcode + passkey + timestamp).toString("base64"),
+                "Timestamp": timestamp,
+                "TransactionType": "CustomerPayBillOnline",
+                "Amount": 1,
+                "PartyA": 254717616430,
+                "PartyB": 174379,
+                "PhoneNumber": 254717616430,
+                "CallBackURL": "https://inuajamii.go.ke:7000/apptest",
+                "AccountReference": "CompanyXLTD",
+                "TransactionDesc": "Payment of X"
+            });
 
+        return {
+            success: true,
+            data: response.raw_body
+        };
+    } catch (error) {
+        console.log("Error: ", error);
+        return {
+            success: false,
+            error: error.message || 'An error occurred'
+        };
+    }
+}
+
+async function getOAuthToken() {
+    try {
+        let response = await axios.get(url, {
+            headers: {
+                "Authorization": "Basic " + Buffer.from('Aelu2ostUYcsOuA31ikitbWHGu7oYrJm:G3AhbEuLhuL99zUA').toString("base64")
+            }
+        });
+        return response.data.access_token;
+    } catch (error) {
+        console.log("Auth Error: ", error.response);
+        throw new Error('Authentication failed');
+    }
+}
+
+function formatDate() {
+    const date = new Date();
+    
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const seconds = ('0' + date.getSeconds()).slice(-2);
+    
+    return `${year}${month}${day}${hours}${minutes}${seconds}`;
+}
   
 
 module.exports = router;
