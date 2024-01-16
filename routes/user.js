@@ -14,6 +14,8 @@ const methodoverride = require('method-override');
 const axios = require('axios')
 const bodyParser = require('body-parser')
 const unirest = require('unirest')
+const mongoose = require('mongoose')
+const trx = require('../models/trx')
 
 router.use(bodyParser.json())
 
@@ -107,11 +109,11 @@ router.get('/mpesa', (req, res) => {
 });
 
 router.post('/mpesanow', async (req, res) => {
-    const recipient = req.body.recipient;
+    const recipient = req.body.phone;
     const amount = req.body.amount;
 
     try {
-        const result = await lipanampesa(); // Wait for lipanampesa to complete and get the result
+        const result = await lipanampesa(recipient, amount); // Wait for lipanampesa to complete and get the result
         console.log(result);
 
         // Use the result data or handle success/error as needed
@@ -125,6 +127,60 @@ router.post('/mpesanow', async (req, res) => {
         res.status(500).json({ success: false, error: 'An error occurred' });
     }
 });
+
+router.post('/apptest', async (req,res)=> {
+    try {
+        const response = await req.body;
+
+        // Destructure the relevant information
+        const {
+          MerchantRequestID,
+          CheckoutRequestID,
+          ResultCode,
+          ResultDesc,
+          CallbackMetadata: { Item },
+        } = response.Body.stkCallback;
+      
+        // Extract additional information from the CallbackMetadata Item array
+        const amount = Item.find((item) => item.Name === 'Amount').Value;
+        const mpesaReceiptNumber = Item.find((item) => item.Name === 'MpesaReceiptNumber').Value;
+        const transactionDate = Item.find((item) => item.Name === 'TransactionDate').Value;
+        const phoneNumber = Item.find((item) => item.Name === 'PhoneNumber').Value;
+      
+        // Now, you can use these variables in your application as needed
+        console.log('MerchantRequestID:', MerchantRequestID);
+        console.log('CheckoutRequestID:', CheckoutRequestID);
+        console.log('ResultCode:', ResultCode);
+        console.log('ResultDesc:', ResultDesc);
+        console.log('Amount:', amount);
+        console.log('MpesaReceiptNumber:', mpesaReceiptNumber);
+        console.log('TransactionDate:', transactionDate);
+        console.log('PhoneNumber:', phoneNumber);
+
+        const newtrx = new trx({
+            cltphone: phoneNumber,
+            recphone: "test",
+            amount: amount,
+            clientId: "test",
+            location: "location",
+            timeout: Date.now(),
+            courierId: "G4S",
+            Date: Date.now()
+        })
+        try {
+            const savedTRX = await newtrx.save()
+            res.send(savedTRX)
+        }catch(err){
+            console.log(err)
+        }
+      
+        // Respond to the incoming request
+        //res.send('Payment callback received.');
+    } catch (error) {
+        console.error('Error extracting callback data:', error);
+        res.status(500).json({ success: false, error: 'An error occurred while processing callback data' });
+    }
+})
 
 
 router.get('/test', (req,res)=> {
@@ -162,7 +218,7 @@ function startInterval(seconds) {
 }
 const url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
 
-async function lipanampesa() {
+async function lipanampesa(recipient, amount) {
     try {
         let oauth_token = await getOAuthToken();
         
@@ -180,11 +236,11 @@ async function lipanampesa() {
                 "Password": Buffer.from(shortcode + passkey + timestamp).toString("base64"),
                 "Timestamp": timestamp,
                 "TransactionType": "CustomerPayBillOnline",
-                "Amount": 1,
-                "PartyA": 254717616430,
+                "Amount": amount,
+                "PartyA": recipient,
                 "PartyB": 174379,
-                "PhoneNumber": 254717616430,
-                "CallBackURL": "https://inuajamii.go.ke:7000/apptest",
+                "PhoneNumber": recipient,
+                "CallBackURL": "https://curiously-saving-eagle.ngrok-free.app/user/apptest",
                 "AccountReference": "CompanyXLTD",
                 "TransactionDesc": "Payment of X"
             });
