@@ -156,7 +156,8 @@ body::before{
     margin-top: 0px;
     padding-top: 0px;
     width:240px;
-    height: 100px;
-    display: block;
+    height: 180px;
+    display: flex;
+    margin-left: 0px;
 }
 

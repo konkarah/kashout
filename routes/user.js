@@ -16,6 +16,8 @@ const bodyParser = require('body-parser')
 const unirest = require('unirest')
 const mongoose = require('mongoose')
 const trx = require('../models/trx')
+const courier = require('../models/courier')
+const courierMessage = require('../courier/courier')
 
 router.use(bodyParser.json())
 
@@ -111,6 +113,18 @@ router.get('/mpesa', (req, res) => {
 router.post('/mpesanow', async (req, res) => {
     const recipient = req.body.phone;
     const amount = req.body.amount;
+    const location = req.body.coordinates
+    //const timeout = req.body.timeout
+    const courier = req.body.courier
+    const clientPhone= "phoneNumber"
+    const clientId = "test"
+    const pickuplocation = "location"
+    const deliverylocation = "deliverylocation"
+    const timeout = Date.now()
+    const courierId =  "G4S"
+    const mydate = Date.now()
+    const status = "pending"
+    //CheckoutRequestID: CheckoutRequestID
 
     try {
         const result = await lipanampesa(recipient, amount); // Wait for lipanampesa to complete and get the result
@@ -119,8 +133,27 @@ router.post('/mpesanow', async (req, res) => {
         // Use the result data or handle success/error as needed
         if (result.success) {
             res.status(200).json({ success: true, data: result.data });
+            const newtrx = new trx({
+                cltphone: clientPhone,
+                recphone: recipient,
+                amount: amount,
+                clientId: clientId,
+                location: pickuplocation,
+                timeout: timeout,
+                courierId: courierId,
+                Date: date,
+                status: status,
+                CheckoutRequestID: result.data.CheckoutRequestID
+            })
+            try {
+                const savedTRX = await newtrx.save()
+                res.send(savedTRX)
+            }catch(err){
+                console.log(err)
+            }
         } else {
             res.status(500).json({ success: false, error: result.error });
+            //console.log("error")
         }
     } catch (error) {
         console.error(error);
@@ -156,23 +189,29 @@ router.post('/apptest', async (req,res)=> {
         console.log('MpesaReceiptNumber:', mpesaReceiptNumber);
         console.log('TransactionDate:', transactionDate);
         console.log('PhoneNumber:', phoneNumber);
-
-        const newtrx = new trx({
-            cltphone: phoneNumber,
-            recphone: "test",
-            amount: amount,
-            clientId: "test",
-            location: "location",
-            timeout: Date.now(),
-            courierId: "G4S",
-            Date: Date.now()
-        })
-        try {
-            const savedTRX = await newtrx.save()
-            res.send(savedTRX)
-        }catch(err){
-            console.log(err)
+        if(ResultCode==0){
+            const newtrx = new trx({
+                cltphone: phoneNumber,
+                recphone: "test",
+                amount: amount,
+                clientId: "test",
+                location: "location",
+                timeout: Date.now(),
+                courierId: "G4S",
+                Date: Date.now(),
+                status: "success",
+                CheckoutRequestID: CheckoutRequestID
+            })
+            try {
+                const savedTRX = await newtrx.save()
+                res.send(savedTRX)
+            }catch(err){
+                console.log(err)
+            }
+        }else if(ResultCode!=0){
+            res.json({"Message": "User cancelled the transaction"})
         }
+    
       
         // Respond to the incoming request
         //res.send('Payment callback received.');
@@ -180,6 +219,29 @@ router.post('/apptest', async (req,res)=> {
         console.error('Error extracting callback data:', error);
         res.status(500).json({ success: false, error: 'An error occurred while processing callback data' });
     }
+})
+
+router.post('/statuscheck', async(req,res)=> {
+    try {
+    const checkoutId = req.body.checkoutId;
+
+  trx.findOne({ CheckoutRequestID: checkoutId }, (err, result) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    if (result) {
+      console.log('Found item:', result.status);
+    } else {
+      console.log('Item not found');
+    }
+
+  });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
 })
 
 
@@ -240,7 +302,7 @@ async function lipanampesa(recipient, amount) {
                 "PartyA": recipient,
                 "PartyB": 174379,
                 "PhoneNumber": recipient,
-                "CallBackURL": "https://1825-41-76-172-105.ngrok-free.app/user/apptest",
+                "CallBackURL": "https://7d1d-197-157-231-226.ngrok-free.app/user/apptest",
                 "AccountReference": "CompanyXLTD",
                 "TransactionDesc": "Payment of X"
             });
