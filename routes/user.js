@@ -240,7 +240,7 @@ async function lipanampesa(recipient, amount) {
                 "PartyA": recipient,
                 "PartyB": 174379,
                 "PhoneNumber": recipient,
-                "CallBackURL": "https://curiously-saving-eagle.ngrok-free.app/user/apptest",
+                "CallBackURL": "https://1825-41-76-172-105.ngrok-free.app/user/apptest",
                 "AccountReference": "CompanyXLTD",
                 "TransactionDesc": "Payment of X"
             });
