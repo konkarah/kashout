@@ -1,50 +1,38 @@
 const mongoose = require('mongoose');
 
-const trxSchema = new mongoose.Schema({
-  cltphone: {
+const courierSchema = new mongoose.Schema({
+  courierId: {
     type: String,
     required: true,
   },
-  recphone: {
+  courierLogo: {
     type: String,
     required: true,
   },
-  amount: {
+  courierName: {
     type: Number,
     required: true,
   },
-  clientId: {
+  courierAddress: {
     type: String,
     required: true,
   },
-  location: {
+  courierPhone: {
     type: String,
     required: true,
   },
-  timeout: {
+  courierWebsite: {
     type: Date,
     default: Date.now,
   },
-  courierId: {
+  courierCallBack: {
     type: String,
     required: true,
   },
   date: {
     type: Date,
     default: Date.now,
-  },
-  location: {
-    type: String,
-    required: true,
-  },
-  CheckoutRequestID: {
-    type: String,
-    required: true,
-  },
-  status: {
-    type: String,
-    required: true,
-  },
+  }
 });
 
-module.exports = mongoose.model('trx', trxSchema)
+module.exports = mongoose.model('courier', courierSchema)
