@@ -189,19 +189,21 @@ router.post('/apptest', async (req,res)=> {
         console.log('TransactionDate:', transactionDate);
         console.log('PhoneNumber:', phoneNumber);
         if(ResultCode==0){
-            trx.findOneAndUpdate(
-                { CheckoutRequestID: CheckoutRequestID },  // Query criteria
-                { $set: { status: "success", MpesaReceiptNumber: mpesaReceiptNumber } },  // Update operation
-                { returnDocument: 'after' },  // Return the updated document
-                (err, result) => {
-                  if (err) {
-                    console.error('Error updating document:', err);
-                    return;
-                  }
+            try{
+                const updatedtrx = await trx.findOneAndUpdate(
+                    { CheckoutRequestID:CheckoutRequestID },
+                    { $set: { status: "success", MpesaReceiptNumber:mpesaReceiptNumber } },
+                    { new: true } // Return the modified document
+                );
             
-                  console.log('Updated document:', result);
+                if (updatedtrx) {
+                    res.status(200).json(updatedtrx);
+                } else {
+                    res.status(404).json({ error: 'not found' });
                 }
-              );
+                } catch (error) {
+                res.status(500).json({ error: 'Internal Server Error' });
+                }
         }else if(ResultCode!=0){
             res.json({"Message": "User cancelled the transaction"})
         }
