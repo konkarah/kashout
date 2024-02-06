@@ -45,6 +45,10 @@ const trxSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  MpesaReceiptNumber: {
+    type: String,
+    required: true,
+  }
 });
 
 module.exports = mongoose.model('trx', trxSchema)

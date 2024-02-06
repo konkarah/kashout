@@ -132,7 +132,6 @@ router.post('/mpesanow', async (req, res) => {
 
         // Use the result data or handle success/error as needed
         if (result.success) {
-            res.status(200).json({ success: true, data: result.data });
             const newtrx = new trx({
                 cltphone: clientPhone,
                 recphone: recipient,
@@ -141,13 +140,13 @@ router.post('/mpesanow', async (req, res) => {
                 location: pickuplocation,
                 timeout: timeout,
                 courierId: courierId,
-                Date: date,
+                Date: mydate,
                 status: status,
                 CheckoutRequestID: result.data.CheckoutRequestID
             })
             try {
                 const savedTRX = await newtrx.save()
-                res.send(savedTRX)
+                res.status(200).json({ success: true, data: savedTRX });
             }catch(err){
                 console.log(err)
             }
@@ -190,24 +189,19 @@ router.post('/apptest', async (req,res)=> {
         console.log('TransactionDate:', transactionDate);
         console.log('PhoneNumber:', phoneNumber);
         if(ResultCode==0){
-            const newtrx = new trx({
-                cltphone: phoneNumber,
-                recphone: "test",
-                amount: amount,
-                clientId: "test",
-                location: "location",
-                timeout: Date.now(),
-                courierId: "G4S",
-                Date: Date.now(),
-                status: "success",
-                CheckoutRequestID: CheckoutRequestID
-            })
-            try {
-                const savedTRX = await newtrx.save()
-                res.send(savedTRX)
-            }catch(err){
-                console.log(err)
-            }
+            trx.findOneAndUpdate(
+                { CheckoutRequestID: CheckoutRequestID },  // Query criteria
+                { $set: { status: "success", MpesaReceiptNumber: mpesaReceiptNumber } },  // Update operation
+                { returnDocument: 'after' },  // Return the updated document
+                (err, result) => {
+                  if (err) {
+                    console.error('Error updating document:', err);
+                    return;
+                  }
+            
+                  console.log('Updated document:', result);
+                }
+              );
         }else if(ResultCode!=0){
             res.json({"Message": "User cancelled the transaction"})
         }

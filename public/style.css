@@ -152,12 +152,15 @@ body::before{
     width:100%;
   }
 
-.logoo{
-    margin-top: 0px;
-    padding-top: 0px;
-    width:240px;
-    height: 180px;
+  .logoo-container {
     display: flex;
-    margin-left: 0px;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.logoo {
+    margin: 0;
+    width: 360px;
+    height: 150px;
 }
 
