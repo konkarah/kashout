@@ -24,6 +24,7 @@ router.use(bodyParser.json())
 
 const initialisepassport = require('../passport-config');
 const { appendFile } = require('fs');
+const timeout = require('rest/interceptor/timeout');
 initialisepassport(
     passport, 
     email => users.find(user => user.email === email),
@@ -162,10 +163,9 @@ router.post('/mpesanow', async (req, res) => {
     }
 });
 
-router.post('/apptest', async (req,res)=> {
+/*router.post('/apptest', async (req,res)=> {
     try {
         const response = await req.body;
-
         // Destructure the relevant information
         const {
           MerchantRequestID,
@@ -200,6 +200,34 @@ router.post('/apptest', async (req,res)=> {
             
                 if (updatedtrx) {
                     res.status(200).json(updatedtrx);
+                    var myresult = {}
+                    //fetch the details from the transaction
+                    try {
+                        const checkoutId = CheckoutRequestID;
+                        const result = await trx.findOne({ CheckoutRequestID: checkoutId }).exec();
+                
+                        if (result) {
+                            // Update myresult based on result
+                            myresult = result;
+                            //console.log('Found item:', myresult);
+                        } else {
+                            console.log('Item not found');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        return res.status(500).send('Internal Server Error');
+                    }
+                    const pickuplocation = myresult.location
+                    const deliverylocation = myresult.location
+                    const timeToDeliver = myresult.timeout
+                    const uniqueIdentifier = myresult.CheckoutRequestID
+                    const classOfTransaction = "test"
+                    const url = myresult.courierId
+                    try{
+                        courierMessage(pickuplocation, deliverylocation, timeToDeliver, uniqueIdentifier, classOfTransaction, url)
+                    }catch{
+                        console.log(error)
+                    }
                 } else {
                     res.status(404).json({ error: 'not found' });
                 }
@@ -217,7 +245,77 @@ router.post('/apptest', async (req,res)=> {
         console.error('Error extracting callback data:', error);
         res.status(500).json({ success: false, error: 'An error occurred while processing callback data' });
     }
-})
+})*/
+
+
+router.post('/apptest', async (req, res) => {
+    try {
+        const response = req.body;
+        const {
+            MerchantRequestID,
+            CheckoutRequestID,
+            ResultCode,
+            ResultDesc,
+            CallbackMetadata: { Item },
+        } = response.Body.stkCallback;
+
+        const amount = Item.find((item) => item.Name === 'Amount').Value;
+        const mpesaReceiptNumber = Item.find((item) => item.Name === 'MpesaReceiptNumber').Value;
+        const transactionDate = Item.find((item) => item.Name === 'TransactionDate').Value;
+        const phoneNumber = Item.find((item) => item.Name === 'PhoneNumber').Value;
+
+        if (ResultCode === 0) {
+            try {
+                const updatedtrx = await trx.findOneAndUpdate(
+                    { CheckoutRequestID: CheckoutRequestID },
+                    { $set: { status: "success", MpesaReceiptNumber: mpesaReceiptNumber } },
+                    { new: true }
+                );
+
+                if (updatedtrx) {
+                    res.status(200).json(updatedtrx);
+                    try {
+                        const checkoutId = CheckoutRequestID;
+                        const result = await trx.findOne({ CheckoutRequestID: checkoutId }).exec();
+
+                        if (result) {
+                            const pickuplocation = result.location;
+                            const deliverylocation = result.location;
+                            const timeToDeliver = result.timeout;
+                            const uniqueIdentifier = result.CheckoutRequestID;
+                            const classOfTransaction = "test";
+                            const mycourier = await courier.findOne({ courierId: result.courierId }).exec();
+                            const url = mycourier.courierCallBack;
+
+                            try {
+                                courierMessage(pickuplocation, deliverylocation, timeToDeliver, uniqueIdentifier, classOfTransaction, url);
+                            } catch (error) {
+                                console.error('Error sending courier message:', error);
+                                // Handle the error appropriately, maybe log it or respond to the client
+                            }
+                        } else {
+                            console.log('Item not found');
+                        }
+                    } catch (error) {
+                        console.error('Error fetching transaction details:', error);
+                        res.status(500).json({ success: false, error: 'Internal Server Error' });
+                    }
+                } else {
+                    res.status(404).json({ error: 'Not found' });
+                }
+            } catch (error) {
+                console.error('Error updating transaction status:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        } else {
+            res.json({ message: "User cancelled the transaction" });
+        }
+    } catch (error) {
+        console.error('Error extracting callback data:', error);
+        res.status(500).json({ success: false, error: 'An error occurred while processing callback data' });
+    }
+});
+
 
 router.post('/statuscheck', async(req,res)=> {
     try {
@@ -300,7 +398,7 @@ async function lipanampesa(recipient, amount) {
                 "PartyA": recipient,
                 "PartyB": 174379,
                 "PhoneNumber": recipient,
-                "CallBackURL": "https://7d1d-197-157-231-226.ngrok-free.app/user/apptest",
+                "CallBackURL": "https://3cba-41-76-168-3.ngrok-free.app/user/apptest",
                 "AccountReference": "CompanyXLTD",
                 "TransactionDesc": "Payment of X"
             });
@@ -322,7 +420,7 @@ async function getOAuthToken() {
     try {
         let response = await axios.get(url, {
             headers: {
-                "Authorization": "Basic " + Buffer.from('Aelu2ostUYcsOuA31ikitbWHGu7oYrJm:G3AhbEuLhuL99zUA').toString("base64")
+                "Authorization": "Basic " + Buffer.from('CFALNZPZT3lExbSu9KU7nNhF40OR5DZ6KnxerdPWOcEr6dM6:DvGkJcCupGAGayClqAYrEKw2ZY6qwO1SES6tWWGemYFGAlm2K9RzLKkX0Wx6CMxU').toString("base64")
             }
         });
         return response.data.access_token;
