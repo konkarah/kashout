@@ -124,6 +124,7 @@ router.post('/mpesanow', async (req, res) => {
     const courierId =  "G4S"
     const mydate = Date.now()
     const status = "pending"
+    const MpesaReceiptNumber = "NULL"
     //CheckoutRequestID: CheckoutRequestID
 
     try {
@@ -142,7 +143,8 @@ router.post('/mpesanow', async (req, res) => {
                 courierId: courierId,
                 Date: mydate,
                 status: status,
-                CheckoutRequestID: result.data.CheckoutRequestID
+                CheckoutRequestID: result.data.CheckoutRequestID,
+                MpesaReceiptNumber: MpesaReceiptNumber
             })
             try {
                 const savedTRX = await newtrx.save()
