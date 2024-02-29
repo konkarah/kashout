@@ -48,6 +48,10 @@ const trxSchema = new mongoose.Schema({
   MpesaReceiptNumber: {
     type: String,
     required: true,
+  },
+  OTP: {
+    type: String,
+    default: null,
   }
 });
 

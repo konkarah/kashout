@@ -1,0 +1,24 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="signin.css">
+</head>
+<body>
+    <div class="wrap">
+        <h2>sign in</h2>
+        <% if (messages.error) { %>
+            <p class="error"><%= messages.error %></p>
+        <% } %>
+        <form action="http://localhost:3005/user/signin" method="POST" name="form">
+            <div class="email"><input type="email" placeholder="email" name="email" value=""></div>
+            <input type="password" placeholder="password" maxlength="5" name="password" value="">
+            <input type="submit" value="sign in">
+            <p id="link"><a href="http://localhost:3005/user/signup">Sign Up</a></p>
+        </form>
+
+        
+    </div>
+</body>
+</html>
