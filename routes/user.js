@@ -20,7 +20,8 @@ const courier = require('../models/courier')
 const courierMessage = require('../courier/courier')
 const sendSMS = require('../SMS')
 const otpGenerator = require('otp-generator')
-const paymentRequest = require('../processPayment');
+const completed = require('../models/completedTrx')
+const randomstring = require("randomstring");
 
 router.use(bodyParser.json())
 
@@ -346,58 +347,74 @@ router.get('/test', (req,res)=> {
     res.render('hometest')
 })
 
-router.get('/generateOTP', async(req,res)=>{
-    const checkoutId = req.body.checkoutID
-    //generate OTP and insert into DB
-    try {
-        //check if exists
-        const result = await trx.findOne({ CheckoutRequestID: checkoutId }).exec();
-        const OTP = await generateOTP(); // Wait for lipanampesa to complete and get the result
-        console.log(result);
+router.post('/generateOTP', async (req, res) => {
+    const checkoutId = req.body.checkoutID;
+                // Generate OTP
+                const OTP = generateOTP();
+                console.log(OTP)
 
-        // Use the result data or handle success/error as needed
-        if (result!=null) {
-            const newtrx = new trx({
-                OTP: OTP
-            })
+    try {
+        // Check if transaction exists
+        const result = await trx.findOne({ CheckoutRequestID: checkoutId }).exec();
+
+        if (result) {
+
+            // Update transaction with OTP
+            const updatedtrx = await trx.findOneAndUpdate(
+                { CheckoutRequestID: checkoutId },
+                { $set: { OTP: OTP } },
+                { new: true }
+            ).exec();
+
+            // Send OTP to the customer
             try {
-                const updatedtrx = await trx.findOneAndUpdate(
-                    { CheckoutRequestID: checkoutId },
-                    { $set: { OTP: OTP,} },
-                    { new: true }
-                );
-                res.status(200).json({ success: true, data: updatedtrx });
-                //send OTP to the customer
-                sendSMS(OTP)
-                //finish transaction
-            }catch(err){
-                console.log(err)
+                const response = await sendSMS(OTP);
+                console.log(response);
+            } catch (smsError) {
+                console.error('Error sending SMS:', smsError);
+                // Log the error and handle it appropriately
             }
+
+            res.status(200).json({ success: true, data: updatedtrx });
         } else {
-            res.status(500).json({ success: false, error: result.error });
-            //console.log("error")
+            res.status(404).json({ success: false, error: 'Transaction not found' });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error: 'An error occurred' });
+        console.error('Error generating OTP:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
-})
+});
+
 router.post('/processOTP', async(req,res)=> {
     const OTP = req.body.OTP
     //compare OTP
     const result = await trx.findOne({ OTP: OTP }).exec()
+    const origin = await randomstring.generate();
+    console.log(result)
     if(result){
-        paymentRequest()
-        .then(response => {
-            console.log('Payment request successful:', response);
-        })
-        .catch(error => {
-            console.error('Error performing payment request:', error);
-        });
+        const result = await performPaymentRequest(origin, result.recphone, result.amount);
+        console.log(result) 
+        if (result.success) {
+            //log the trx on DB
+            const newtrx = new completed({
+                originatorID: origin,
+            })
+            try {
+                const savedTRX = await newtrx.save()
+                //res.status(200).json({ success: true, data: savedTRX });
+                console.log(savedTRX)
+            }catch(err){
+                console.log(err)
+            }
+            console.log(result)
+        } else {
+            res.status(500).json({ success: false, error: result.error });
+            //console.log("error")
+        }
         try {
             const updatedtrx = await trx.findOneAndUpdate(
                 { OTP: OTP },
-                { $set: { OTP: OTP,} },
+                { $set: { status: "sucess",} },
                 { new: true }
             );
             res.status(200).json({ success: true, data: updatedtrx });
@@ -408,6 +425,41 @@ router.post('/processOTP', async(req,res)=> {
         res.send("WRONG OTP")
     }
 
+})
+router.post('/processResult', async(req, res) => {
+    try {
+        const result = req.body.Result;
+        
+
+        // Check if the result has the expected properties
+        if (result && result.ResultType !== undefined && result.ResultCode !== undefined) {
+                        // Log the result
+                        console.log(result.ResultParameters.ResultParameter[0].Value);
+            //const trxresult = await completed.findOne({ originatorID: result.OriginatorConversationID }).exec()
+            // Update transaction with OTP
+            const updatedtrx = await completed.findOneAndUpdate(
+                { originatorID: result.OriginatorConversationID },
+                { $set: { mpesaTrx: result.TransactionID,  amount: result.ResultParameters.ResultParameter[0].Value,recipient: result.ResultParameters.ResultParameter[4].Value} },
+                { new: true }
+            ).exec();
+
+                console.log(updatedtrx)
+            // Send a response indicating successful processing
+            //res.status(200).json({ success: true, message: 'Result processed successfully' });
+        } else {
+            // Invalid result format
+            res.status(400).json({ success: false, error: 'Invalid result format' });
+        }
+    } catch (error) {
+        // Handle unexpected errors
+        console.error('Error processing result:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
+
+router.post('/timeout', (req,res)=> {
+    const result = req.body.Result;
+    console.log(result)
 })
 
 function checkauthenticated(req, res, next){
@@ -494,16 +546,16 @@ async function processpayment(recipient, amount) {
                 'Authorization': 'Bearer ' + oauth_token
             })
             .send({
-                "OriginatorConversationID": "feb5e3f2-fbbc-4745-844c-ee37b546f627",
+                "OriginatorConversationID": "96cd0ed4-f3fa-4f4d-b719-72db6808046c",
                 "InitiatorName": "testapi",
-                "SecurityCredential":"EsJocK7+NjqZPC3I3EO+TbvS+xVb9TymWwaKABoaZr/Z/n0UysSs..",
+                "SecurityCredential":"MCshn9hwULWa11zact4SnnD+99r20AmlPQQiHdF0mDITlw9yoUtaO6TEBZAFhN038hnkwLGP5Yxoz/V8uwvw1vBHw2hnkZnswxw26lNOhIxQyRVZ3nKbgZrxxb+Z6xDZ6D0CbWac5LXyGBvMPIj0Noq80Qqy6j2Twb6xs8DDY5BPPF2Au3Gx/G5WGPygsV7vXq1/kirpncuyMYVwYmAgG8R77tVjQmUG8LHBWHAm0fFuETwUbvKUgJEnvvxEA91H/zNiwzpWcwSzllK49S+nuB8A6YbRbT0QfRSfAFNFhcHZ9oKOrrJQkm8Ly+FUMIQUvvVYfJ/0JNVRmlT/H3usyw==",
                 "CommandID":"BusinessPayment",
                 "Amount":"10",
                 "PartyA":"600996",
                 "PartyB":"254717616430",
                 "Remarks":"here are my remarks",
-                "QueueTimeOutURL":"https://mydomain.com/b2c/queue",
-                "ResultURL":"https://mydomain.com/b2c/result",
+                "QueueTimeOutURL":"https://e071-196-22-131-250.ngrok-free.app/user/timeout",
+                "ResultURL":"https://e071-196-22-131-250.ngrok-free.app/user/processresult",
                 "Occassion":"Christmas"
             });
 
@@ -551,9 +603,49 @@ function formatDate() {
 const generateOTP = () => {
     // You can customize the length and digits of the OTP
     const otp = otpGenerator.generate(10, { digits: true,lowerCaseAlphabets: true, upperCaseAlphabets: true, specialChars: true });
-  
+    console.log(otp)
     return otp;
   };
+  async function performPaymentRequest(origin, phone, amount) {
+    try {
+        let oauth_token = await getOAuthToken();
+        
+        //let timestamp = formatDate();
+        //const passkey = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+        //const shortcode = '174379'
+        
+        let response = await unirest.post('https://sandbox.safaricom.co.ke/mpesa/b2c/v3/paymentrequest')
+            .headers({
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + oauth_token
+            })
+            .send({
+                "OriginatorConversationID": origin,
+                "InitiatorName": "testapi",
+                "SecurityCredential": "CAUioVCBe9iK99KeVpI9/QZvmOqYNCIH5RslYj+0g/HYYWn3bnY9djFy4FD5peeJwHVCAJmugpDHtjPdCvSqtrPQxWPnckUEt4orgT3AmO3hJdzNAya/sOiSKrkGc2TmcJmaKDEncRH8f2/IRLy3NBkB+GZ5hC0g1mLUH4MqPZouZbptZaeEG4inf4V/EjfdSmNL6BHFCyBXDhUtj8/Ct+QOK7Iw9yB46nJczNNIC+SoYIgBhjdeRJuz6TgUC4TvUDZuSw67/635NLF6R7BXJEnXNABtRjVTLNL1xTnJ8jgHbE1bwm1/6bhHc4+WcT28HSPyQfF31coRERIGd24/yw==",
+                "CommandID": "BusinessPayment",
+                "Amount": amount,
+                "PartyA": 600997,
+                "PartyB": phone,
+                "Remarks": "Test remarks",
+                "QueueTimeOutURL": "https://e071-196-22-131-250.ngrok-free.app/user/processresult",
+                "ResultURL": "https://e071-196-22-131-250.ngrok-free.app/user/processresult",
+                "occasion": "tst" 
+            });
+
+        return {
+            success: true,
+            data: response.raw_body
+        };
+    } catch (error) {
+        console.log("Error: ", error);
+        return {
+            success: false,
+            error: error.message || 'An error occurred'
+        };
+    }
+}
+
 
 router.get('/sms', async(req, res)=> {
     try {

@@ -1,7 +1,11 @@
 const https = require('https');
 const querystring = require('querystring');
 
-const sendSMS = ( msg) => {
+const sendSMS = (msg) => {
+    // Check if message is empty
+    if (!msg || msg.trim() === '') {
+      return Promise.reject(new Error('Message must not be empty'));
+    }
   // Get the SMS data
   //movetech
   /*const smsData = {
@@ -19,7 +23,7 @@ const sendSMS = ( msg) => {
     apikey : "1f97c55104c0c4089ca033d78a48bd9b",
     shortcode : "Celcom_API",
     mobile : "254717616430", // Bulk messages can be comma separated
-    message : msg
+    message : `${msg}`
   };
 
 
