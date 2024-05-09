@@ -1,5 +1,5 @@
 body {
-    background: url('./index.jpg');
+    background: url('index.jpg');
     background-size: cover;
     font-family: Arial, Helvetica, sans-serif;
 }
@@ -19,7 +19,7 @@ h2 {
    text-align: center; 
 }
 
-input[type=text],input[type=password], input[type=number] {
+input[type=text],input[type=password], input[type=number], select, input[type=tel] {
     width: 100%;
     box-sizing: border-box;
     padding: 12px 5px;

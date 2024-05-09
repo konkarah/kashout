@@ -115,6 +115,12 @@ router.get('/mpesa', (req, res) => {
     res.render('mpesa');
 });
 
+router.get('/checkout/:amount', async(req,res)=> {
+    const finalPrice =  req.params.amount
+    console.log(finalPrice)
+    res.render('checkout', {amount: finalPrice})
+})
+
 router.post('/mpesanow', async (req, res) => {
     const recipient = req.body.phone;
     const amount = req.body.amount;
@@ -126,11 +132,13 @@ router.post('/mpesanow', async (req, res) => {
     const pickuplocation = "location"
     const deliverylocation = "deliverylocation"
     const timeout = Date.now()
-    const courierId =  "G4S"
+    const courierId =  req.body.courier
     const mydate = Date.now()
     const status = "pending"
     const MpesaReceiptNumber = "NULL"
     //CheckoutRequestID: CheckoutRequestID
+    console.log(recipient)
+    console.log(ln)
 
     try {
         const result = await lipanampesa(recipient, amount); // Wait for lipanampesa to complete and get the result
@@ -515,7 +523,7 @@ async function lipanampesa(recipient, amount) {
                 "PartyA": recipient,
                 "PartyB": 174379,
                 "PhoneNumber": recipient,
-                "CallBackURL": "https://3cba-41-76-168-3.ngrok-free.app/user/apptest",
+                "CallBackURL": "https://ec89-41-76-168-3.ngrok-free.app/user/apptest",
                 "AccountReference": "CompanyXLTD",
                 "TransactionDesc": "Payment of X"
             });
@@ -576,7 +584,7 @@ async function getOAuthToken() {
     try {
         let response = await axios.get(url, {
             headers: {
-                "Authorization": "Basic " + Buffer.from('CFALNZPZT3lExbSu9KU7nNhF40OR5DZ6KnxerdPWOcEr6dM6:DvGkJcCupGAGayClqAYrEKw2ZY6qwO1SES6tWWGemYFGAlm2K9RzLKkX0Wx6CMxU').toString("base64")
+                "Authorization": "Basic " + Buffer.from('QG8qJmtWdWLYLu10bxfjrpkgEhsyp6vvix9vEFaYTMp8tCig:RRjDMevI5U4KfCv1TGmiMy68TDiYMUX5jbhe9xEg3GhmAeg1HrKxSeWTVklTBGcM').toString("base64")
             }
         });
         return response.data.access_token;

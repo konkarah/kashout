@@ -1,0 +1,176 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <style>
+        body {
+                background: url('index.jpg');
+                background-size: cover;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            .wrap {
+                max-width: 350px;
+                border-radius: 20px;
+                margin: auto;
+                background: rgba(0,0,0,0.8);
+                box-sizing: border-box;
+                padding: 40px;
+                color: #ffffff;
+                margin-top: 100px;
+            }
+
+            h2 {
+            text-align: center; 
+            }
+
+            input[type=text],input[type=password], input[type=number], select, input[type=tel] {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 12px 5px;
+                background: rgba(0, 0, 0, 0.10);
+                border: none;
+                outline: none;
+                border-bottom: 1px dotted #fff;
+                border-radius: 5px;
+                color: white;
+                margin: 5px;
+                font-weight: bold;
+            }
+
+            input[type=email] {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 12px 5px;
+                background: rgba(0, 0, 0, 0.10);
+                border: none;
+                outline: none;
+                border-bottom: 1px dotted #fff;
+                border-radius: 5px;
+                color: white;
+                margin: 5px;
+                font-weight: bold;
+            }
+
+            input[type=submit] {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 10px 0;
+                margin-top: 30px;
+                outline: none;
+                border: none;
+                background: #60adde;
+                opacity: 0.7;
+                border-radius: 20px;
+                font-size: 20px;
+                color: #ffffff;
+
+            }
+
+            input[type= submit]:hover {
+                background: #003366;
+                opacity: 0.7;
+            }
+
+            #link{
+                margin-top: 20px;
+                text-align: center;
+                justify-content: center;
+            }
+            #link a{
+                color: white;
+                font-size: medium;
+                margin: auto;
+            }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h2>Pay through Mpesa</h2>
+        <form action="" method="POST" id="main">
+            <input type="number" placeholder="Recipient phone/ Till/ Paybill Number" name="recipient" id="rec">
+            <input type="number" placeholder="amount" name="amount" value=<%= amount%> id= "amount">
+            <select id="courier">
+                <option>select</option>
+                <option >G4S</option>
+                <option >Wells Fargo</option>
+                <option>Kashout</option>
+                <option>Faster</option>
+            </select>
+            <input type='tel' placeholder="Your phone number" name="client" id="client" >
+            <select name="timeout" id="timeout">
+                <option>select</option>
+                <option>6 Hrs</option>
+                <option>12 Hrs</option>
+                <option>18 Hrs</option>
+                <option>24 Hrs</option>
+            </select>
+            <input type="submit" value="Pay Now" name="submit" id="submit" onClick="sendCheckout()">
+        </form>
+    </div>
+
+    <script>
+        var x = ''
+        var y = ''
+        document.getElementById("main").addEventListener("click", function(event){
+            event.preventDefault()
+            });
+
+
+        //getlocation
+        function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else if(navigator.geolocation == null) {
+            x.innerHTML = "Geolocation is not supported by this browser.";
+        }
+        }
+        function showPosition(position) {
+            x.innerHTML = position.coords.latitude
+            y.innerHTML = position.coords.longitude
+            t = position.coords.latitude
+            console.log(position.coords.latitude)
+            }
+            function showError(error) {
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                    x.innerHTML = "User denied the request for Geolocation."
+                    break;
+                    case error.POSITION_UNAVAILABLE:
+                    x.innerHTML = "Location information is unavailable."
+                    break;
+                    case error.TIMEOUT:
+                    x.innerHTML = "The request to get user location timed out."
+                    break;
+                    case error.UNKNOWN_ERROR:
+                    x.innerHTML = "An unknown error occurred."
+                    break;
+                }
+                }
+        getLocation()
+        async function sendCheckout(){
+            var rec = document.getElementById("rec").value
+            var amount = document.getElementById("amount").value
+            var courier = document.getElementById("courier").value
+            var client = document.getElementById("client").value
+            var timeout = document.getElementById("timeout").value
+            var coordinates = {x, y}
+            console.log(rec)
+            console.log(amount)
+            console.log(courier)
+            const rawResponse = await fetch('http://localhost:3005/user/mpesanow', {
+                method: 'POST',
+                headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({phone: rec, b: amount, amount: amount, timeout: timeout, clientphone: client, courier: courier, coordinates: coordinates})
+            });
+            const content = await rawResponse.json();
+
+            console.log(content);
+            };
+    </script>
+</body>
+</html>

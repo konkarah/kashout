@@ -36,6 +36,7 @@ function deliver(pickupLocation, deliveryLocation, timeToDeliver, uniqueIdentifi
 
     // Handle errors
     req.on('error', (error) => {
+        // create a cron job for storing and retrying resends every 5 min
         console.log('Error sending delivery request:', error.message);
     });
 

@@ -39,7 +39,7 @@ const trxSchema = new mongoose.Schema({
   },
   CheckoutRequestID: {
     type: String,
-    required: true,
+
   },
   status: {
     type: String,

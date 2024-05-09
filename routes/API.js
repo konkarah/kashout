@@ -126,6 +126,8 @@ router.post('/mpesanow',authenticateToken, async (req, res) => {
 });
 
 
+
+
 async function generateAccessToken(user) {
   const userObject = user.toJSON(); // Convert Mongoose document to plain JavaScript object
   return jwt.sign(userObject, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '3600s' });
